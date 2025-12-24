@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 import 'package:motoboy/helper/notification_helper.dart';
 import 'package:motoboy/util/dimensions.dart';
 import 'package:motoboy/util/images.dart';
@@ -24,6 +26,14 @@ import 'features/map/controllers/map_controller.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
+Future<void> _requestNotificationPermission() async {
+  if (GetPlatform.isAndroid) {
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,11 +67,8 @@ Future<void> main() async {
 
   await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
 
-  // 🔹 Android 13+ – permissão obrigatória
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.requestPermission();
+  // ✅ Android 13+ – permissão correta
+  await _requestNotificationPermission();
 
   FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
 
